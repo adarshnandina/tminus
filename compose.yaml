@@ -10,6 +10,7 @@ services:
       LOADER_PASSWORD: ${LOADER_PASSWORD}
       TRANSFORMER_PASSWORD: ${TRANSFORMER_PASSWORD}
       REPORTER_PASSWORD: ${REPORTER_PASSWORD}
+      METABASE_DB_PASSWORD: ${METABASE_DB_PASSWORD}
     ports:
       - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     volumes:
@@ -23,5 +24,28 @@ services:
       start_period: 30s
     restart: unless-stopped
 
+  metabase:
+    image: metabase/metabase:v0.65.4        # pinned version
+    depends_on:
+      warehouse:
+        condition: service_healthy          # don't start until Postgres is ready
+    environment:
+      MB_DB_TYPE: postgres                  # app DB in Postgres, not the embedded H2 file
+      MB_DB_HOST: warehouse                 # the service name doubles as the hostname
+      MB_DB_PORT: 5432
+      MB_DB_DBNAME: metabase
+      MB_DB_USER: metabase
+      MB_DB_PASS: ${METABASE_DB_PASSWORD}
+      MB_ENCRYPTION_SECRET_KEY: ${MB_ENCRYPTION_SECRET_KEY}
+      MB_ANON_TRACKING_ENABLED: "false"
+    ports:
+      - "127.0.0.1:3000:3000"
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail -s http://localhost:3000/api/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 120s                    # Metabase (Java) takes 1–2 min to boot
+    restart: unless-stopped
 volumes:
   warehouse_data:
