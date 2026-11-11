@@ -21,8 +21,11 @@ jobs:
       - uses: astral-sh/setup-uv@v7
         with:
           enable-cache: true
-      - name: Install dev dependencies
-        run: uv sync --locked          # fails if uv.lock is out of date with pyproject.toml
+      - name: Install dev dependencies, Apply factory migrations twice (proves they are idempotent) # fails if uv.lock is out of date with pyproject.toml
+        run: |
+          uv sync --locked
+          uv run --env-file .env python -m tminus.simulator.migrate
+          uv run --env-file .env python -m tminus.simulator.migrate
       - uses: actions/cache@v6
         with:
           path: ~/.cache/pre-commit
