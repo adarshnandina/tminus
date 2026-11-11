@@ -38,7 +38,7 @@ jobs:
       - name: Create .env from template
         run: cp .env.example .env
       - name: Start warehouse
-        run: docker compose up -d --wait
+        run: docker compose up -d --wait warehouse
       - name: Roles exist
         run: |
           roles=$(docker compose exec -T warehouse psql -U tminus_admin -d warehouse -tAc \
@@ -51,6 +51,10 @@ jobs:
           if docker compose exec -T warehouse psql -U reporter -d warehouse -c "create schema hack;"; then
             echo "::error::reporter was able to create a schema"; exit 1
           fi
+      - name: Metabase app database exists
+        run: |
+          docker compose exec -T warehouse psql -U tminus_admin -d warehouse -tAc \
+            "select 1 from pg_database where datname = 'metabase'" | grep -q 1
       - name: Show logs on failure
         if: failure()
         run: docker compose logs warehouse
