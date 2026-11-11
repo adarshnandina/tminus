@@ -1,0 +1,23 @@
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets: never commit
+.env
+**/.dlt/secrets.toml
+
+# dbt generated
+transform/target/
+transform/dbt_packages/
+transform/logs/
+
+# OS / editor
+.DS_Store
+.vscode/
